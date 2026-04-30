@@ -1,0 +1,78 @@
+services:
+  claude-box:
+    build:
+      context: .
+      platforms:
+        - linux/arm64
+      args:
+        UID: "1000"
+        GID: "1000"
+    platform: linux/arm64
+    image: claude-box:latest
+    container_name: claude-box
+    hostname: claude-box
+
+    # Auto-start whenever the Docker daemon starts (e.g. after host reboot
+    # or Docker Desktop launch). "unless-stopped" means it will not come
+    # back if you explicitly `docker stop` it — swap for "always" if you
+    # want it to ignore manual stops too.
+    restart: unless-stopped
+
+    # Required for the egress firewall (iptables/ipset).
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+    # Resource caps so a runaway agent can't eat the host.
+    mem_limit: 8g
+    pids_limit: 4096
+
+    environment:
+      TERM: xterm-256color
+      # Egress firewall mode: web (default) | strict | off.
+      # - web:    80/443 to anywhere + DNS, blocks other ports & RFC1918.
+      # - strict: 80/443 only to a small allowlist (npm, GitHub, Anthropic).
+      # - off:    no firewall.
+      FIREWALL_MODE: ${FIREWALL_MODE:-web}
+      CLAUDE_BOX_SHARE_HOST: "1"
+      CLAUDE_BOX_HOST_PROJECTS: ${HOME}/Projects
+      # ngrok auth token. Set in your shell or in a .env file next to
+      # this compose file (compose auto-loads .env). The agent reads
+      # NGROK_AUTHTOKEN directly — no config file needed.
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
+
+    # Match the host's home path inside the container so memory keys
+    # (which encode the absolute cwd) line up between host and container.
+    working_dir: ${HOME}/Projects
+
+    volumes:
+      # Your code, mounted at the SAME absolute path as the host. This is
+      # what makes per-project memory portable — the encoded path used by
+      # ~/.claude/projects/<encoded>/memory/ matches on both sides.
+      - ${HOME}/Projects:${HOME}/Projects
+
+      # Host ~/.claude, read-only. Wired into the writable ~/.claude by
+      # setup-host-claude.sh on container start (skills, agents, commands,
+      # settings, per-project memory).
+      - ${HOME}/.claude:/host/.claude:ro
+
+      # Container's writable ~/.claude lives in a named volume, isolated
+      # from the host. Sessions, todos, container-specific creds go here.
+      - claude-config:/home/dev/.claude
+
+      # Persist pipx/uv/etc. installs across rebuilds.
+      - claude-home:/home/dev/.local
+
+      # Share host git config read-only so commits get your name/email.
+      - ${HOME}/.gitconfig:/home/dev/.gitconfig:ro
+
+    # Keep the container alive; you attach via `docker exec`.
+    command: ["sleep", "infinity"]
+
+    # Healthier signal handling than default.
+    init: false  # tini already runs from the Dockerfile ENTRYPOINT
+    stop_grace_period: 10s
+
+volumes:
+  claude-config:
+  claude-home:

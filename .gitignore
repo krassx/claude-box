@@ -1,0 +1,21 @@
+# Local secrets — NGROK_AUTHTOKEN, ANTHROPIC_API_KEY, etc.
+.env
+.env.*
+!.env.example
+
+# Local-only compose tweaks
+docker-compose.override.yml
+docker-compose.override.yaml
+
+# macOS
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Misc local artifacts
+*.log
+*.local

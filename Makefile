@@ -1,4 +1,6 @@
-.PHONY: build up down shell tmux logs rebuild login status
+.PHONY: build up down shell tmux logs rebuild login status \
+        firewall-web firewall-strict firewall-off tunnel \
+        sync-settings du prune-cache prune-history
 
 build:
 	docker compose build
@@ -49,3 +51,30 @@ sync-settings:
 	docker exec claude-box rm -f /home/dev/.claude/settings.json
 	docker restart claude-box
 	@echo "settings.json re-seeded from host."
+
+# Show what's using disk inside the named volumes.
+du:
+	@echo "== Volume totals =="
+	@docker exec claude-box du -sh /home/dev/.claude /home/dev/.local 2>/dev/null
+	@echo
+	@echo "== ~/.claude breakdown (top 15) =="
+	@docker exec claude-box bash -c 'du -sh /home/dev/.claude/* 2>/dev/null | sort -hr | head -15'
+
+# Clear ephemeral cache directories. Safe — Claude regenerates as needed.
+# Does NOT touch projects/ (conversation history), sessions/, settings.json,
+# credentials, skills, plugins.
+prune-cache:
+	@docker exec claude-box bash -c '\
+		for d in paste-cache telemetry debug file-history shell-snapshots; do \
+			[ -d "/home/dev/.claude/$$d" ] && rm -rf /home/dev/.claude/$$d/* 2>/dev/null; \
+		done; true'
+	@echo "cleared paste-cache, telemetry, debug, file-history, shell-snapshots."
+
+# Delete conversation transcript files older than DAYS. Destructive.
+# Usage: make prune-history DAYS=30
+prune-history:
+	@test -n "$(DAYS)" || (echo "usage: make prune-history DAYS=30" && exit 1)
+	@docker exec claude-box bash -c '\
+		count=$$(find /home/dev/.claude/projects -type f -name "*.jsonl" -mtime +$(DAYS) 2>/dev/null | wc -l); \
+		find /home/dev/.claude/projects -type f -name "*.jsonl" -mtime +$(DAYS) -delete 2>/dev/null; \
+		echo "deleted $$count session transcript(s) older than $(DAYS) days"'

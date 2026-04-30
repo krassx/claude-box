@@ -73,6 +73,14 @@ services:
     init: false  # tini already runs from the Dockerfile ENTRYPOINT
     stop_grace_period: 10s
 
+    # Cap Docker's stdout log file. Without rotation, json-file logs grow
+    # forever and can fill the Docker Desktop VM disk on macOS.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   claude-config:
   claude-home:

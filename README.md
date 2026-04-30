@@ -149,6 +149,24 @@ Best for unattended/automated use.
 
 ---
 
+## Permission mode
+
+Inside the container, `claude` is wrapped to always run with
+`--dangerously-skip-permissions` — i.e., bypass mode by default. This is
+safe here because the container itself is the security boundary (network
+egress is firewalled, filesystem access is limited to what's mounted).
+
+```bash
+claude              # bypass mode (default)
+CLAUDE_BYPASS=0 claude   # opt out for one invocation
+/usr/bin/claude     # invoke the unwrapped binary directly
+```
+
+The wrapper lives at `/usr/local/bin/claude` and shadows the npm-installed
+`/usr/bin/claude` via PATH order.
+
+---
+
 ## Daily workflow
 
 ```bash

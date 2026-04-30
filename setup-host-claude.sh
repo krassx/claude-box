@@ -17,7 +17,8 @@ mkdir -p "$DEV_CLAUDE"
 
 # Symlink top-level read-only artifacts. Live updates from host are visible
 # immediately because these are symlinks into the RO mount.
-for item in skills agents commands plugins CLAUDE.md MEMORY.md; do
+for item in skills agents commands plugins CLAUDE.md MEMORY.md \
+            statusline-command.sh statusline.sh; do
   src="$HOST_CLAUDE/$item"
   dst="$DEV_CLAUDE/$item"
   if [[ -e "$src" && ! -e "$dst" ]]; then

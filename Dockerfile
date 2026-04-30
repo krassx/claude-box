@@ -79,9 +79,13 @@ RUN { id ubuntu >/dev/null 2>&1 && userdel -r ubuntu 2>/dev/null || true; } \
 COPY init-firewall.sh    /usr/local/bin/init-firewall.sh
 COPY setup-host-claude.sh /usr/local/bin/setup-host-claude.sh
 COPY entrypoint.sh       /usr/local/bin/entrypoint.sh
+# Wrapper so plain `claude` runs with --dangerously-skip-permissions.
+# Shadows /usr/bin/claude via PATH order (/usr/local/bin comes first).
+COPY claude-wrapper.sh   /usr/local/bin/claude
 RUN chmod +x /usr/local/bin/init-firewall.sh \
              /usr/local/bin/setup-host-claude.sh \
-             /usr/local/bin/entrypoint.sh
+             /usr/local/bin/entrypoint.sh \
+             /usr/local/bin/claude
 
 USER dev
 WORKDIR /home/dev

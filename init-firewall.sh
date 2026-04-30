@@ -100,8 +100,11 @@ case "$MODE" in
     base_rules
     block_private_ranges
     # Allow outbound web + ICMP (ping/traceroute) to public addresses.
+    # UDP/443 covers QUIC / HTTP/3; private ranges still blocked by the
+    # earlier REJECT rules regardless of protocol.
     sudo iptables -A OUTPUT -p tcp --dport 80  -j ACCEPT
     sudo iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+    sudo iptables -A OUTPUT -p udp --dport 443 -j ACCEPT
     sudo iptables -A OUTPUT -p icmp -j ACCEPT
     ;;
 

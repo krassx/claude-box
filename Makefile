@@ -42,3 +42,10 @@ firewall-off:
 tunnel:
 	@test -n "$(PORT)" || (echo "usage: make tunnel PORT=3000" && exit 1)
 	docker exec -it claude-box ngrok http $(PORT)
+
+# Re-seed ~/.claude/settings.json from host. Preserves auth, sessions,
+# todos, and other state in the named volume.
+sync-settings:
+	docker exec claude-box rm -f /home/dev/.claude/settings.json
+	docker restart claude-box
+	@echo "settings.json re-seeded from host."

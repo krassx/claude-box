@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     ANDROID_HOME=/opt/android-sdk \
     ANDROID_SDK_ROOT=/opt/android-sdk \
     ANDROID_NDK_HOME=/opt/android-sdk/ndk/28.2.13676358 \
-    PATH=/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/platform-tools:/opt/android-sdk/emulator:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    PATH=/usr/lib/jvm/default-java/bin:/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/platform-tools:/opt/android-sdk/emulator:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         # Core / fetch
@@ -42,12 +42,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
     && ln -sf /usr/bin/batcat /usr/local/bin/bat 2>/dev/null || true \
     # Architecture-agnostic per-version symlinks (work on amd64 and arm64).
+    # JDK 17 is the default via JAVA_HOME + PATH ordering; JDK 21 stays on disk.
     # Switch with e.g. `export JAVA_HOME=/usr/lib/jvm/java-21 PATH=$JAVA_HOME/bin:$PATH`.
     && ln -sf "$(ls -d /usr/lib/jvm/java-17-openjdk-* | head -n1)" /usr/lib/jvm/java-17 \
     && ln -sf "$(ls -d /usr/lib/jvm/java-21-openjdk-* | head -n1)" /usr/lib/jvm/java-21 \
-    # Default `java`/`javac` to JDK 17 (Android tooling); JDK 21 stays on disk.
-    && update-alternatives --set java  /usr/lib/jvm/java-17/bin/java \
-    && update-alternatives --set javac /usr/lib/jvm/java-17/bin/javac \
     && ln -sf /usr/lib/jvm/java-17 /usr/lib/jvm/default-java \
     && rm -rf /var/lib/apt/lists/*
 

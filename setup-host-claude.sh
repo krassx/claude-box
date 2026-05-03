@@ -17,7 +17,7 @@ mkdir -p "$DEV_CLAUDE"
 
 # Symlink top-level read-only artifacts. Live updates from host are visible
 # immediately because these are symlinks into the RO mount.
-for item in skills agents commands plugins CLAUDE.md MEMORY.md \
+for item in skills agents commands CLAUDE.md MEMORY.md \
             statusline-command.sh statusline.sh; do
   src="$HOST_CLAUDE/$item"
   dst="$DEV_CLAUDE/$item"
@@ -34,6 +34,15 @@ if [[ -f "$HOST_CLAUDE/settings.json" && ! -e "$DEV_CLAUDE/settings.json" ]]; th
   cp "$HOST_CLAUDE/settings.json" "$DEV_CLAUDE/settings.json"
   chmod 644 "$DEV_CLAUDE/settings.json"
   echo "[claude-share] seeded settings.json (writable copy)"
+fi
+
+# plugins/: seed a writable copy so `claude plugin install` works inside the
+# container. First run only; host updates after that are NOT propagated.
+# Install plugins inside the container from then on (or delete this dir to
+# re-seed from the host on next start).
+if [[ -d "$HOST_CLAUDE/plugins" && ! -e "$DEV_CLAUDE/plugins" ]]; then
+  cp -a "$HOST_CLAUDE/plugins" "$DEV_CLAUDE/plugins"
+  echo "[claude-share] seeded plugins/ (writable copy)"
 fi
 
 # Per-project memory: symlink only the memory/ subdir of each project, so

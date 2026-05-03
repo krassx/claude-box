@@ -37,6 +37,12 @@ ALLOWED_DOMAINS=(
   security.ubuntu.com
   ports.ubuntu.com
   deb.debian.org
+  dl.google.com
+  maven.google.com
+  dl-ssl.google.com
+  repo.maven.apache.org
+  plugins.gradle.org
+  services.gradle.org
 )
 
 # RFC1918 + link-local + CGNAT — block egress to these in web/strict modes
